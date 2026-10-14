@@ -1,0 +1,9 @@
+Quick Notes — setup
+
+Workspace: https://sessionvault-matrix-4c0c.vercel.app
+
+1. chrome://extensions → enable Developer mode
+2. "Load unpacked" → select THIS folder
+3. Toolbar icon → Settings → paste your workspace key → Save
+
+Notes sync automatically in the background.

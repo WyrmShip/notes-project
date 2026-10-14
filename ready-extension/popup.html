@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Quick Notes</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Quick Notes</h1>
+    </header>
+
+    <textarea id="note" placeholder="Type a note…"></textarea>
+
+    <div class="row">
+      <button id="save-note" class="btn">Save note</button>
+      <button id="send" class="btn accent">Send</button>
+    </div>
+
+    <div id="update-notice" class="sync-status" style="display:none">&nbsp;</div>
+    <div id="sync-status" class="sync-status">&nbsp;</div>
+
+    <ul id="notes"></ul>
+
+    <footer>
+      <a href="#" id="open-options">Settings</a>
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

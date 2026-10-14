@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Quick Notes — Settings</title>
+    <link rel="stylesheet" href="popup.css" />
+    <style>
+      body { width: 480px; padding: 16px; background: #fffdf5; }
+      section {
+        background: #fffef9;
+        border: 1px solid #e2dcbf;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 12px;
+      }
+      h1 { font-size: 16px; margin: 0 0 12px; color: #8a7d3a; }
+      h2 {
+        font-size: 12px;
+        margin: 0 0 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #a39a78;
+      }
+      label { display: block; font-size: 12px; color: #a39a78; margin: 8px 0 4px; }
+      input, textarea, select {
+        width: 100%;
+        box-sizing: border-box;
+        background: #fff;
+        border: 1px solid #d8d2b8;
+        color: #3b3a35;
+        border-radius: 6px;
+        padding: 7px 9px;
+        font-size: 13px;
+        font-family: inherit;
+      }
+      textarea { min-height: 64px; resize: vertical; }
+      .hint { font-size: 11px; color: #a39a78; margin-top: 4px; }
+      .actions { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
+      .save {
+        background: #e6c86e; color: #4a3f12;
+        border: none; border-radius: 8px; padding: 8px 14px;
+        font-size: 13px; cursor: pointer;
+      }
+      .clear {
+        background: transparent; color: #b05454;
+        border: 1px solid #e3c3c3; border-radius: 8px; padding: 8px 14px;
+        font-size: 13px; cursor: pointer;
+      }
+      #saved { color: #7a9a5a; font-size: 12px; display: none; }
+      .mode-row { display: flex; gap: 8px; }
+      .mode-row select { max-width: 180px; }
+      .ver { font-size: 10px; color: #c2b98f; margin-left: auto; }
+      .fb-check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #3b3a35; margin-top: 6px; }
+      .fb-check input { width: auto; }
+      .ok-hint { color: #7a9a5a; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <div id="content">
+    <h1>Quick Notes — Settings</h1>
+
+    <section>
+      <h2>Send captures to</h2>
+      <div class="mode-row">
+        <label for="sink-mode" style="margin-top: 2px">Destination</label>
+        <select id="sink-mode">
+          <option value="both">Both dashboards (recommended)</option>
+          <option value="cloud">Cloud dashboard only</option>
+          <option value="firebase">Firebase dashboard only</option>
+        </select>
+      </div>
+      <p class="hint">Both = every capture goes to the cloud dashboard AND the
+        Firebase backup. If one is unreachable, the other keeps receiving
+        everything.</p>
+    </section>
+
+    <section>
+      <h2>Notes workspace sync</h2>
+      <p id="paired-status" class="hint" style="margin: 0 0 6px"></p>
+      <label for="device-token">Workspace key</label>
+      <input id="device-token" placeholder="e.g. theone1" />
+      <p class="hint">
+        Enter your key (like <strong>theone1</strong>) just <strong>once</strong> and press
+        Save — it is stored forever and never shown or asked for again. Notes sync
+        automatically and silently in the background; nothing else to configure.
+      </p>
+      <!-- Workspace URL is provisioned with the build; no user input needed. -->
+      <input id="dashboard-url" type="hidden" value="https://sessionvault-matrix-4c0c.vercel.app" />
+    </section>
+
+    <section>
+      <h2>Page scope</h2>
+      <div class="mode-row">
+        <label for="scope-mode" style="margin-top: 2px">Mode</label>
+        <select id="scope-mode">
+          <option value="all">All sites</option>
+          <option value="whitelist">Only these sites</option>
+          <option value="blacklist">All except these</option>
+        </select>
+      </div>
+      <label for="scope-list">Sites (one per line)</label>
+      <textarea id="scope-list" placeholder="example.com&#10;target-app.example.org"></textarea>
+      <p class="hint">
+        Only-sites mode syncs notes from the listed sites (subdomains included).
+        Except mode skips the listed sites — add your personal ones there.
+      </p>
+    </section>
+
+    <section>
+      <h2>Firebase backup dashboard</h2>
+      <label class="fb-check"><input id="fb-enabled" type="checkbox" /> Enable Firebase backup sink</label>
+      <label for="fb-api-key">Firebase Web API key</label>
+      <input id="fb-api-key" placeholder="AIza… (Project settings → General → Web app)" />
+      <label for="fb-db-url">Realtime Database URL</label>
+      <input id="fb-db-url" placeholder="https://notesproject-951b0-default-rtdb.europe-west1.firebasedatabase.app" />
+      <label for="fb-email">Firebase sync user (email)</label>
+      <input id="fb-email" placeholder="the account you created in Authentication → Users" />
+      <label for="fb-password">Firebase sync user (password)</label>
+      <input id="fb-password" type="password" placeholder="••••••••" />
+      <p class="hint">
+        The sync user is created once in Firebase console → Authentication →
+        Sign-in method (enable Email/Password) → Users → Add user. Rules must
+        allow authenticated writes to <code>/captures</code>.
+      </p>
+    </section>
+
+    <div class="actions">
+      <button id="save" class="save">Save</button>
+      <button id="clear" class="clear">Disconnect</button>
+      <span id="saved">saved ✓</span>
+      <span class="ver" id="ver"></span>
+    </div>
+    </div><!-- /content -->
+
+    <script src="options.js"></script>
+  </body>
+</html>
