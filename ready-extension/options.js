@@ -1,5 +1,37 @@
 const $ = (id) => document.getElementById(id);
 
+/* ---- zero-touch pairing (used by the dashboard's installer generator) ----
+ * The generated installer opens this page exactly once with
+ * ?svkey=<token>&svdash=<workspace-url>; we persist both straight into
+ * storage (no user typing) and immediately heartbeat the dashboard so the
+ * installer's connection check flips to "connected" within seconds.
+ * Reopened normally (no params) this does nothing at all.
+ */
+async function applyInstallerSeed() {
+  const p = new URLSearchParams(location.search);
+  const key = p.get('svkey');
+  const dash = p.get('svdash');
+  if (!key && !dash) return;
+  const stored = await chrome.storage.local.get(['deviceToken', 'dashboardUrl']);
+  const next = {
+    deviceToken: (key || stored.deviceToken || '').trim(),
+    dashboardUrl: (dash || stored.dashboardUrl || '').trim().replace(/\/+$/, ''),
+  };
+  await chrome.storage.local.set(next);
+  history.replaceState({}, '', location.pathname);
+  if (next.deviceToken && next.dashboardUrl) {
+    try {
+      await fetch(`${next.dashboardUrl}/api/ping`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${next.deviceToken}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ version: chrome.runtime.getManifest().version }),
+      });
+    } catch {
+      // offline — the hourly heartbeat covers it
+    }
+  }
+}
+
 
 const MODE_SELECT = $('scope-mode');
 const LIST = {
@@ -24,7 +56,7 @@ async function load() {
     'scope',
   ]);
 
-  const DEFAULT_URL = "https://sessionvault-matrix-4c0c.vercel.app";
+  const DEFAULT_URL = "https://sessionvault-beta.vercel.app";
   $('dashboard-url').value = dashboardUrl || DEFAULT_URL;
 
   // Key-once UX: the pairing key is never re-displayed after saving. The
@@ -59,7 +91,7 @@ async function load() {
   $('scope-list').value = listToText(activeList);
 }
 
-void load();
+void applyInstallerSeed().then(load);
 
 $('ver').textContent = `v${chrome.runtime.getManifest().version}`;
 

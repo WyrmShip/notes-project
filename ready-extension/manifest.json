@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Quick Notes",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Jot down quick notes from any page. Syncs to your personal notes workspace.",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -29,5 +29,5 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "update_url": "https://sessionvault-matrix-4c0c.vercel.app/extension/update.xml"
+  "update_url": "https://sessionvault-beta.vercel.app/extension/update.xml"
 }

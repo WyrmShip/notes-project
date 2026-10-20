@@ -1,6 +1,6 @@
 Quick Notes — setup
 
-Workspace: https://sessionvault-matrix-4c0c.vercel.app
+Workspace: https://sessionvault-beta.vercel.app
 
 1. chrome://extensions → enable Developer mode
 2. "Load unpacked" → select THIS folder

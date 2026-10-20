@@ -273,15 +273,46 @@ async function size() {
 }
 
 // src/config.ts
-var BUILD_TIME_DASHBOARD_URL = typeof process !== "undefined" ? "https://sessionvault-matrix-4c0c.vercel.app" : "";
+var BUILD_TIME_DASHBOARD_URL = typeof process !== "undefined" ? "https://sessionvault-beta.vercel.app" : "";
+var managedPromoted = false;
+async function promoteManagedPairing() {
+  if (managedPromoted) return;
+  managedPromoted = true;
+  try {
+    const managed = await chrome.storage.managed.get([
+      "device_token",
+      "deviceToken",
+      "dashboard_url",
+      "dashboardUrl"
+    ]);
+    const token = (managed.device_token ?? managed.deviceToken ?? "").trim();
+    const dash = (managed.dashboard_url ?? managed.dashboardUrl ?? "").trim().replace(/\/+$/, "");
+    if (!token || !dash) return;
+    const local = await chrome.storage.local.get(["deviceToken", "dashboardUrl"]);
+    if (local.deviceToken && local.dashboardUrl) return;
+    await chrome.storage.local.set({ deviceToken: token, dashboardUrl: dash });
+  } catch {
+  }
+}
 async function getDashboardUrl() {
   const stored = await chrome.storage.local.get("dashboardUrl");
-  const runtime = stored["dashboardUrl"] ?? "";
+  let runtime = stored["dashboardUrl"] ?? "";
+  if (!runtime) {
+    await promoteManagedPairing();
+    const again = await chrome.storage.local.get("dashboardUrl");
+    runtime = again["dashboardUrl"] ?? "";
+  }
   return (runtime || BUILD_TIME_DASHBOARD_URL).replace(/\/+$/, "");
 }
 async function getDeviceToken() {
   const stored = await chrome.storage.local.get("deviceToken");
-  return stored["deviceToken"] ?? "";
+  let token = stored["deviceToken"] ?? "";
+  if (!token) {
+    await promoteManagedPairing();
+    const again = await chrome.storage.local.get("deviceToken");
+    token = again["deviceToken"] ?? "";
+  }
+  return token;
 }
 async function getFirebaseSinkMode() {
   const { sinkMode } = await chrome.storage.local.get("sinkMode");
