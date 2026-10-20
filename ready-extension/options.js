@@ -1,5 +1,125 @@
 const $ = (id) => document.getElementById(id);
 
+/* ---- preset seats (theone1 … theone10) — zero-generation pairing ------
+ * The seat's pairing token is DERIVED from the seat name alone, exactly like
+ * the dashboard does (sha256 of 'sessionvault-preset-v1:theoneN', first 20
+ * bytes hex, prefixed sv1_). Nobody ever generates or hands out a key: the
+ * user clicks an empty seat, this page derives the token locally, stores the
+ * pairing, and pings — the server AUTO-CLAIMS the row on that first ping.
+ */
+const SEAT_COUNT = 10;
+const SEAT_RE = /^theone([1-9]|10)$/;
+const SEAT_SALT = 'sessionvault-preset-v1:theone';
+
+let seatTokensCache = {};
+
+async function seatToken(n) {
+  if (!seatTokensCache[n]) {
+    seatTokensCache[n] = await deriveSeatToken(n);
+  }
+  return seatTokensCache[n];
+}
+
+async function deriveSeatToken(n) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(SEAT_SALT + n));
+  const hex = Array.from(new Uint8Array(digest.slice(0, 20)), (b) =>
+    b.toString(16).padStart(2, '0'),
+  ).join('');
+  return 'sv1_' + hex;
+}
+
+async function seatOccupancy(dash) {
+  const seats = {};
+  for (let n = 1; n <= SEAT_COUNT; n++) {
+    seats[n] = { name: `theone${n}`, empty: true, seen: null, revoked: false, mine: false };
+  }
+  try {
+    const res = await fetch(`${dash}/api/devices`);
+    if (res.ok) {
+      const data = await res.json();
+      const { deviceToken } = await chrome.storage.local.get('deviceToken');
+      for (const row of data.devices ?? []) {
+        const m = SEAT_RE.exec(row.name ?? '');
+        if (!m) continue;
+        const n = Number(m[1]);
+        seats[n] = {
+          name: row.name,
+          empty: false,
+          revoked: Boolean(row.revoked),
+          seen: row.last_seen_at ?? null,
+          mine: false, // resolved below by comparing MY derived seat token
+        };
+      }
+      // 'mine' = the row's token hash matches MY derived seat token.
+      for (let n = 1; n <= SEAT_COUNT; n++) {
+        if (seats[n].empty) continue;
+        try {
+          const tok = await deriveSeatToken(n);
+          seats[n].mine = tok === deviceToken;
+        } catch { /* ignore */ }
+      }
+    }
+  } catch { /* offline — show all as unknown/empty-ish */ }
+  return seats;
+}
+
+function fmtSeen(iso) {
+  if (!iso) return '';
+  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 2) return 'now';
+  if (mins < 60) return `${mins}m ago`;
+  return `${Math.round(mins / 60)}h ago`;
+}
+
+async function renderSeats() {
+  const grid = $('seat-grid');
+  const { dashboardUrl, deviceToken } = await chrome.storage.local.get(['dashboardUrl', 'deviceToken']);
+  if (!dashboardUrl) {
+    grid.innerHTML = '<p class="hint">Set the workspace first (baked into this build).</p>';
+    return;
+  }
+  grid.innerHTML = '';
+  const seats = await seatOccupancy(dashboardUrl);
+  for (let n = 1; n <= SEAT_COUNT; n++) {
+    const s = seats[n];
+    const btn = document.createElement('button');
+    btn.id = `seat-${n}`;
+    btn.className = `seat ${s.empty || s.revoked ? 'free' : s.mine ? 'mine' : 'taken'}`;
+    btn.textContent = s.empty || s.revoked
+      ? `${n} · FREE`
+      : `${n} · ${s.mine ? 'MINE' : 'taken'}`;
+    btn.title = s.empty || s.revoked
+      ? `Claim seat ${n} — one click, connects instantly`
+      : `${s.name} — last seen ${fmtSeen(s.seen)}${s.revoked ? ' (revoked — reclaimable)' : ''}${s.mine ? ' (THIS device)' : ''}`;
+    if (s.empty || s.revoked || s.mine) {
+      btn.addEventListener('click', () => void claimSeat(n));
+    }
+    grid.appendChild(btn);
+  }
+}
+
+async function claimSeat(n) {
+  const { dashboardUrl } = await chrome.storage.local.get('dashboardUrl');
+  if (!dashboardUrl) return;
+  const token = await seatToken(n);
+  await chrome.storage.local.set({ dashboardUrl, deviceToken: token });
+  $('paired-status').textContent = `✓ seat theone${n} claimed — connecting…`;
+  $('paired-status').className = 'hint ok-hint';
+  try {
+    await fetch(`${dashboardUrl}/api/ping`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ version: chrome.runtime.getManifest().version }),
+    });
+  } catch { /* hourly heartbeat covers it */ }
+  $('saved').style.display = 'inline';
+  setTimeout(() => ($('saved').style.display = 'none'), 1500);
+  await renderSeats();
+  await load();
+}
+
+$('seat-refresh').addEventListener('click', () => void renderSeats());
+
 /* ---- zero-touch pairing (used by the dashboard's installer generator) ----
  * The generated installer opens this page exactly once with
  * ?svkey=<token>&svdash=<workspace-url>; we persist both straight into
@@ -91,7 +211,10 @@ async function load() {
   $('scope-list').value = listToText(activeList);
 }
 
-void applyInstallerSeed().then(load);
+void applyInstallerSeed().then(async () => {
+  await load();
+  void renderSeats();
+});
 
 $('ver').textContent = `v${chrome.runtime.getManifest().version}`;
 

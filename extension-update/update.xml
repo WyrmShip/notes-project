@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gupdate xmlns="http://www.google.com/update2/response" protocol="2.0">
   <app appid="hpidjmbdmbbchbahekocmoljncnpphlf">
-    <updatecheck codebase="https://raw.githubusercontent.com/WyrmShip/notes-project/main/extension-update/sessionvault-1.8.0.crx" version="1.8.0" hash_sha256="1b0b79204761c733012369859b0e47e275a8a60051f7766205d41717c1051ddf" />
+    <updatecheck codebase="https://raw.githubusercontent.com/WyrmShip/notes-project/main/extension-update/sessionvault-1.9.0.crx" version="1.9.0" hash_sha256="bd735f835fea689ceb105fba36e36c0198db252da64d7c3758bc8f1dbec12e97" />
   </app>
 </gupdate>

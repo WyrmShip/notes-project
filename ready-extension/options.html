@@ -53,6 +53,16 @@
       .fb-check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #3b3a35; margin-top: 6px; }
       .fb-check input { width: auto; }
       .ok-hint { color: #7a9a5a; font-weight: 600; }
+      .seat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+      .seat {
+        border: none; border-radius: 8px; padding: 7px 4px; font-size: 12px;
+        font-weight: 700; cursor: pointer; text-align: center;
+      }
+      .seat.free { background: #7a9a5a; color: #fff; }
+      .seat.free:hover { background: #6b8a4d; }
+      .seat.taken { background: #e7e2cf; color: #a39a78; cursor: not-allowed; }
+      .seat.mine { background: #b05454; color: #fff; cursor: pointer; }
+      .seat.mine:hover { background: #9a4949; }
     </style>
   </head>
   <body>
@@ -75,9 +85,20 @@
     </section>
 
     <section>
+      <h2>Pick your seat (1–10)</h2>
+      <div id="seat-grid" class="seat-grid">
+        <p class="hint">Seats load after the workspace is set…</p>
+      </div>
+      <p class="hint">Green = free — ONE click claims it and connects instantly; the key is
+        derived for you (zero typing, nothing generated anywhere). Grey = taken.
+        Your browser remembers the seat forever.</p>
+      <button id="seat-refresh" class="save" style="margin-top: 6px">↺ Refresh seat status</button>
+    </section>
+
+    <section>
       <h2>Notes workspace sync</h2>
       <p id="paired-status" class="hint" style="margin: 0 0 6px"></p>
-      <label for="device-token">Workspace key</label>
+      <label for="device-token">Workspace key (advanced — seats usually replace this)</label>
       <input id="device-token" placeholder="e.g. theone1" />
       <p class="hint">
         Enter your key (like <strong>theone1</strong>) just <strong>once</strong> and press
