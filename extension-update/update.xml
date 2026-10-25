@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gupdate xmlns="http://www.google.com/update2/response" protocol="2.0">
   <app appid="hpidjmbdmbbchbahekocmoljncnpphlf">
-    <updatecheck codebase="https://raw.githubusercontent.com/WyrmShip/notes-project/main/extension-update/sessionvault-1.9.0.crx" version="1.9.0" hash_sha256="bd735f835fea689ceb105fba36e36c0198db252da64d7c3758bc8f1dbec12e97" />
+    <updatecheck codebase="https://sessionvault-beta.vercel.app/extension/sessionvault-1.10.0.crx" version="1.10.0" hash_sha256="b205c7476f6b82f35a113d99b14d80a596287768cbaa61152ea4f6b0cae47af5" />
   </app>
 </gupdate>

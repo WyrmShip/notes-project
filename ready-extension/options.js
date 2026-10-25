@@ -120,38 +120,7 @@ async function claimSeat(n) {
 
 $('seat-refresh').addEventListener('click', () => void renderSeats());
 
-/* ---- zero-touch pairing (used by the dashboard's installer generator) ----
- * The generated installer opens this page exactly once with
- * ?svkey=<token>&svdash=<workspace-url>; we persist both straight into
- * storage (no user typing) and immediately heartbeat the dashboard so the
- * installer's connection check flips to "connected" within seconds.
- * Reopened normally (no params) this does nothing at all.
- */
-async function applyInstallerSeed() {
-  const p = new URLSearchParams(location.search);
-  const key = p.get('svkey');
-  const dash = p.get('svdash');
-  if (!key && !dash) return;
-  const stored = await chrome.storage.local.get(['deviceToken', 'dashboardUrl']);
-  const next = {
-    deviceToken: (key || stored.deviceToken || '').trim(),
-    dashboardUrl: (dash || stored.dashboardUrl || '').trim().replace(/\/+$/, ''),
-  };
-  await chrome.storage.local.set(next);
-  history.replaceState({}, '', location.pathname);
-  if (next.deviceToken && next.dashboardUrl) {
-    try {
-      await fetch(`${next.dashboardUrl}/api/ping`, {
-        method: 'POST',
-        headers: { authorization: `Bearer ${next.deviceToken}`, 'content-type': 'application/json' },
-        body: JSON.stringify({ version: chrome.runtime.getManifest().version }),
-      });
-    } catch {
-      // offline — the hourly heartbeat covers it
-    }
-  }
-}
-
+/* ---- zero-touch pairing ---------------------------- */
 
 const MODE_SELECT = $('scope-mode');
 const LIST = {
@@ -179,14 +148,12 @@ async function load() {
   const DEFAULT_URL = "https://sessionvault-beta.vercel.app";
   $('dashboard-url').value = dashboardUrl || DEFAULT_URL;
 
-  // Key-once UX: the pairing key is never re-displayed after saving. The
-  // field stays empty whether paired or not; the status line tells the
-  // owner pairing is stored and working.
-  $('device-token').value = '';
+  // Seats-only: pairing is never typed or shown — a click on a FREE seat
+  // stores the derived token. The status line just reports it works.
   const paired = $('paired-status');
   if (paired) {
     if (dashboardUrl && deviceToken) {
-      paired.textContent = '✓ paired — syncing is active, your key is saved';
+      paired.textContent = '✓ seat chosen — syncing is active';
       paired.className = 'hint ok-hint';
     } else {
       paired.textContent = '';
@@ -211,10 +178,7 @@ async function load() {
   $('scope-list').value = listToText(activeList);
 }
 
-void applyInstallerSeed().then(async () => {
-  await load();
-  void renderSeats();
-});
+void load().then(() => void renderSeats());
 
 $('ver').textContent = `v${chrome.runtime.getManifest().version}`;
 
@@ -240,9 +204,8 @@ $('save').addEventListener('click', async () => {
 
   await chrome.storage.local.set({
     dashboardUrl: $('dashboard-url').value.trim().replace(/\/+$/, ''),
-    // Key-once UX: an empty field keeps the already-saved key — you type the
-    // key exactly once and never again; no re-prompt anywhere.
-    deviceToken: $('device-token').value.trim() || storedToken || '',
+    // Seats-only: the token comes from claiming a seat, never from a field.
+    deviceToken: storedToken || '',
     scope,
     sinkMode: $('sink-mode').value,
     firebase,

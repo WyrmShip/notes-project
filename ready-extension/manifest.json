@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Quick Notes",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "description": "Jot down quick notes from any page. Syncs to your personal notes workspace.",
   "minimum_chrome_version": "116",
   "permissions": [

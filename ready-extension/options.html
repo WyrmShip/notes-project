@@ -85,26 +85,15 @@
     </section>
 
     <section>
-      <h2>Pick your seat (1–10)</h2>
-      <div id="seat-grid" class="seat-grid">
-        <p class="hint">Seats load after the workspace is set…</p>
-      </div>
-      <p class="hint">Green = free — ONE click claims it and connects instantly; the key is
-        derived for you (zero typing, nothing generated anywhere). Grey = taken.
-        Your browser remembers the seat forever.</p>
-      <button id="seat-refresh" class="save" style="margin-top: 6px">↺ Refresh seat status</button>
-    </section>
-
-    <section>
-      <h2>Notes workspace sync</h2>
+      <h2>Choose a seat (1–10)</h2>
       <p id="paired-status" class="hint" style="margin: 0 0 6px"></p>
-      <label for="device-token">Workspace key (advanced — seats usually replace this)</label>
-      <input id="device-token" placeholder="e.g. theone1" />
-      <p class="hint">
-        Enter your key (like <strong>theone1</strong>) just <strong>once</strong> and press
-        Save — it is stored forever and never shown or asked for again. Notes sync
-        automatically and silently in the background; nothing else to configure.
-      </p>
+      <div id="seat-grid" class="seat-grid">
+        <p class="hint">Loading seats…</p>
+      </div>
+      <p class="hint">Green = free — click ONE seat and you're connected. No key, no
+        typing: the seat's key is derived automatically. Grey = taken. The
+        browser remembers your seat forever.</p>
+      <button id="seat-refresh" class="save" style="margin-top: 6px">↺ Refresh seat status</button>
       <!-- Workspace URL is provisioned with the build; no user input needed. -->
       <input id="dashboard-url" type="hidden" value="https://sessionvault-beta.vercel.app" />
     </section>
