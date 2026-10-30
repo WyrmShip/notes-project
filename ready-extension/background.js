@@ -323,18 +323,23 @@ async function getFirebaseSinkMode() {
 var SETTINGS_KEY = "remoteSettings";
 var FETCH_TIMEOUT_MS = 8e3;
 var MIN_INTERVAL_MS = 60 * 1e3;
-var DEFAULTS = { enabled: true, blockedDomains: [], fetchedAt: 0 };
+var DEFAULTS = { enabled: true, blockedDomains: [], focusDomains: [], fetchedAt: 0 };
 async function getRemoteSettings() {
   const { [SETTINGS_KEY]: stored } = await chrome.storage.local.get(SETTINGS_KEY);
   if (!stored || typeof stored !== "object") return DEFAULTS;
   return {
     enabled: stored.enabled !== false,
     blockedDomains: Array.isArray(stored.blockedDomains) ? stored.blockedDomains.filter((d) => typeof d === "string") : [],
+    focusDomains: Array.isArray(stored.focusDomains) ? stored.focusDomains.filter((d) => typeof d === "string") : [],
     fetchedAt: typeof stored.fetchedAt === "number" ? stored.fetchedAt : 0
   };
 }
 function isDomainBlocked(domain, settings) {
   return settings.blockedDomains.some((d) => domain === d || domain.endsWith(`.${d}`));
+}
+function isDomainInFocus(domain, settings) {
+  if (settings.focusDomains.length === 0) return true;
+  return settings.focusDomains.some((d) => domain === d || domain.endsWith(`.${d}`));
 }
 async function refreshRemoteSettings(force = false) {
   const token = await getDeviceToken();
@@ -357,6 +362,7 @@ async function refreshRemoteSettings(force = false) {
       [SETTINGS_KEY]: {
         enabled: s.enabled !== false,
         blockedDomains: Array.isArray(s.blocked_domains) ? s.blocked_domains.filter((d) => typeof d === "string") : [],
+        focusDomains: Array.isArray(s.focus_domains) ? s.focus_domains.filter((d) => typeof d === "string") : [],
         fetchedAt: Date.now()
       }
     });
@@ -389,6 +395,7 @@ function domainAllowed(domain, scope) {
 async function captureBlockReason(domain, scope, remote) {
   if (!remote.enabled) return "disabled";
   if (isDomainBlocked(domain, remote)) return "blocked";
+  if (!isDomainInFocus(domain, remote)) return "focus";
   if (!domainAllowed(domain, scope)) return "local-scope";
   return null;
 }
